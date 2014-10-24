@@ -1,19 +1,10 @@
+#pragma once
+
 #include <map>
 #include <vector>
 #include <string>
 
 namespace vcf {
-
-struct PositionRecord
-{
-    std::string chrom;
-    size_t pos;
-    std::string id;
-    std::vector<std::string> ref;
-    std::vector<std::string> alt;
-    bool pass;
-    std::string geneName;
-};
 
 enum class MutationType
 {
