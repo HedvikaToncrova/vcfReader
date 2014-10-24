@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -11,7 +12,6 @@ VcfParser::VcfParser( const char * vcfFilePath ) :
     m_vcfFile(vcfFilePath)
 {
     assignNextRecord();
-    
 }
     
     PositionRecord VcfParser::getNextValidRecord()
@@ -32,52 +32,75 @@ void VcfParser::assignNextRecord()
         //do not process metadata for the moment
         if(line.front() != '#')
         {
-            std::stringstream lineStream(line);
-            std::vector<std::string> parsedLine;
-            std::string cell;
-            
-            while(std::getline(lineStream,cell,'\t'))
-            {
-                boost::algorithm::trim(cell);
-                parsedLine.push_back(cell);
-            }
-            m_hasNextRow = constructPositionRecord(parsedLine);
+            auto parsedLine = splitWithDelimiter(line, '\t');
+            m_hasNextRow = constructNextValidRecord(parsedLine);
         }
     }
 }
     
-bool VcfParser::constructPositionRecord( const std::vector<std::string>& parsedLine)
+bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsedLine)
 {
     if (parsedLine.size() != numberOfVcfFields)
     {
         throw VcfParserError("Incorrect number of fields in this row");
     }
-    
-    std::cout << parsedLine[1] << "  " << parsedLine[6] << "    " << parsedLine[6].compare("PASS") << std::endl;
-    
+
     if( parsedLine[6].compare("PASS") == 0)
     {
-        PositionRecord result;
         try
         {
-            result.chrom = parsedLine[0];
-            result.pos = boost::lexical_cast<size_t>(parsedLine[1]);
-            result.id = parsedLine[2];
-            result.ref = splitAndCapitalise(parsedLine[3]);
-            result.alt = splitAndCapitalise(parsedLine[4]);
-            result.pass = true;
-            result.geneName = extractGeneName(parsedLine[7]);
+            m_nextValidRecord.chrom = parsedLine[0];
+            m_nextValidRecord.pos = boost::lexical_cast<size_t>(parsedLine[1]);
+            m_nextValidRecord.id = parsedLine[2];
+            m_nextValidRecord.ref = splitAndCapitalise(parsedLine[3]);
+            m_nextValidRecord.alt = splitAndCapitalise(parsedLine[4]);
+            m_nextValidRecord.pass = true;
+            m_nextValidRecord.geneName = extractGeneName(parsedLine[7]);
+            
         }
         catch( boost::bad_lexical_cast const& )
         {
             throw VcfParserError("Cannot parse " + parsedLine[1] + " as integer");
         }
-        std::cout << "Returning true for position " << result.pos << std::endl;
         return true;
     }
     
 
     return false;
+}
+    
+std::vector<std::string> VcfParser::splitWithDelimiter(std::string str ,char delim) const
+{
+    std::stringstream lineStream(str);
+    std::vector<std::string> parsedLine;
+    std::string cell;
+    
+    while(std::getline(lineStream,cell,delim))
+    {
+        boost::algorithm::trim(cell);
+        parsedLine.push_back(cell);
+    }
+    return parsedLine;
+}
+    
+std::vector<std::string> VcfParser::splitAndCapitalise(std::string str) const
+{
+    std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+    return splitWithDelimiter(str, ',');
+}
+    
+std::string VcfParser::extractGeneName(std::string str) const
+{
+    auto splitString = splitWithDelimiter(str, ';');
+    std::string geneName;
+    for( auto s : splitString )
+    {
+        if(boost::starts_with(s, "Gene="))
+        {
+            geneName = s.substr(5);
+        }
+    }
+    return geneName;
 }
     
 } // namespace vcf
