@@ -12,7 +12,7 @@ int main(int argc, const char * argv[])
     }
     else
     {
-        vcf::GenomeData genomeData( "data/testData.vcf" );
+        vcf::GenomeData genomeData( "test/testVcfFile.vcf" );
         return 1;
     }
     return 0;

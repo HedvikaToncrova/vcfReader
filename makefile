@@ -4,7 +4,7 @@ CFLAGS = -Wall -c -std=c++11 -Wno-c++11-extensions
 all: main.o vcfData.o vcfParser.o
 	$(CC) main.o vcfData.o vcfParser.o -o vcfReader
 
-main.o: main.cpp vcfData.o
+main.o: main.cpp vcfData.hpp
 	$(CC) $(CFLAGS) main.cpp
 
 vcfData.o: vcfData.cpp vcfData.hpp vcfParser.hpp

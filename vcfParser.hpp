@@ -4,9 +4,19 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace vcf
 {
+    
+namespace{
+    const size_t numberOfVcfFields = 10;
+}
+    
+class VcfParserError : public std::runtime_error {
+public:
+    explicit VcfParserError(const std::string &msg) : std::runtime_error(msg) {}
+};
 
 struct PositionRecord
 {
@@ -29,6 +39,9 @@ public:
 private:
     void assignNextRecord();
     bool constructPositionRecord( const std::vector<std::string>& parsedLine);
+    std::vector<std::string> splitAndCapitalise(std::string str);
+    std:string extractGeneName(std::string str);
+    
     
     std::ifstream   m_vcfFile;
     bool            m_hasNextRow;
