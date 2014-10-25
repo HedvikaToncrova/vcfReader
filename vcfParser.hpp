@@ -39,7 +39,7 @@ struct PositionRecord
 class VcfParser
 {
 public:
-    explicit VcfParser( const char * vcfFilePath );
+    explicit VcfParser( std::string vcfFilePath );
     
     /**
      * Checks for a next valid record in the vcf file stream

@@ -11,7 +11,7 @@ using namespace vcf;
 
 BOOST_AUTO_TEST_CASE( testSplitWithDelimiter )
 {
-    VcfParser parser("");
+    VcfParser parser("testData/testVcfFile.vcf");
     auto res1 = parser.splitWithDelimiter("hello, world", ',');
     BOOST_CHECK_EQUAL(res1.size(), 2);
     BOOST_CHECK_EQUAL(res1[0].compare("hello"), 0);
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE( testSplitWithDelimiter )
 
 BOOST_AUTO_TEST_CASE( testSplitAndCapitalise )
 {
-    VcfParser parser("");
+    VcfParser parser("testData/testVcfFile.vcf");
     auto res1 = parser.splitAndCapitalise("ATt, GcT");
     BOOST_CHECK_EQUAL(res1.size(), 2);
     BOOST_CHECK_EQUAL(res1[0].compare("ATT"), 0);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( testSplitAndCapitalise )
 
 BOOST_AUTO_TEST_CASE( testExtractGeneName )
 {
-    VcfParser parser("");
+    VcfParser parser("testData/testVcfFile.vcf");
     std::string str1 = "TCR=22;TR=44;WE=68757;WS=68739;Gene=ENSG00000178591;SYMBOL=DEFB125;CSN=1;BIOTYPE=protein_coding";
     auto res1 = parser.extractGeneName(str1);
     BOOST_CHECK_EQUAL( res1.compare("ENSG00000178591"), 0 );
@@ -103,3 +103,42 @@ BOOST_AUTO_TEST_CASE( testVcfParser )
     BOOST_CHECK( !parser.hasNextValidRecord() );
 }
 
+BOOST_AUTO_TEST_CASE( testIsIncluded )
+{
+    BOOST_CHECK(GeneData::isIncluded("", ""));
+    BOOST_CHECK(GeneData::isIncluded("a", "a"));
+    BOOST_CHECK(!GeneData::isIncluded("a", "A"));
+    BOOST_CHECK(!GeneData::isIncluded("a", "ab"));
+    BOOST_CHECK(GeneData::isIncluded("ab", "a"));
+    BOOST_CHECK(GeneData::isIncluded("ABCD", "AB"));
+    BOOST_CHECK(GeneData::isIncluded("ABCD", "BC"));
+    BOOST_CHECK(GeneData::isIncluded("ABCD", "CD"));
+    BOOST_CHECK(!GeneData::isIncluded("ABCD", "CDE"));
+    BOOST_CHECK(!GeneData::isIncluded("ABCD", "BD"));
+    BOOST_CHECK(GeneData::isIncluded("ABCD", ""));
+}
+
+BOOST_AUTO_TEST_CASE( testEvaluateMutationType)
+{
+    /*
+    BOOST_CHECK(GeneData::evaluateMutationType("", "") == MutationType::IDEN);
+    BOOST_CHECK(GeneData::evaluateMutationType("A", "A") == MutationType::IDEN);
+    BOOST_CHECK(GeneData::evaluateMutationType("AT", "AT") == MutationType::IDEN);
+    BOOST_CHECK(GeneData::evaluateMutationType("A", "G") == MutationType::SVN);
+    BOOST_CHECK(GeneData::evaluateMutationType("C", "T") == MutationType::SVN);
+     */
+    BOOST_CHECK(GeneData::evaluateMutationType("AT", "A") == MutationType::DEL);
+    BOOST_CHECK(GeneData::evaluateMutationType("ABGHG", "H") == MutationType::DEL);
+    BOOST_CHECK(GeneData::evaluateMutationType("ABHG", "ABH") == MutationType::DEL);
+    BOOST_CHECK(GeneData::evaluateMutationType("BHSJ", "HSJ") == MutationType::DEL);
+    BOOST_CHECK(GeneData::evaluateMutationType("D", "BDHA") == MutationType::INS);
+    BOOST_CHECK(GeneData::evaluateMutationType("D", "DNJ") == MutationType::INS);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "ADBK") == MutationType::INS);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "DBHJ") == MutationType::INS);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "PLDB") == MutationType::INS);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "") == MutationType::DEL);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "ADKBHJ") == MutationType::MVN);
+    BOOST_CHECK(GeneData::evaluateMutationType("DB", "ADKBHJ") == MutationType::MVN);
+    BOOST_CHECK(GeneData::evaluateMutationType("AAAA", "ATAT") == MutationType::MVN);
+    BOOST_CHECK(GeneData::evaluateMutationType("CTCT", "CACTTTTTT") == MutationType::MVN);
+}

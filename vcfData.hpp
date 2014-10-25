@@ -3,14 +3,19 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <memory>
+
+#include "vcfParser.hpp"
 
 namespace vcf {
 
 enum class MutationType
 {
-    SVN, INS, DEL, MVN, IDEN
+    IDEN, SVN, INS, DEL, MVN
 };
 
+typedef std::map<MutationType, int> mutationTypeCounter_t;
+    
 class GeneData
 {
 public:
@@ -19,15 +24,16 @@ public:
 
     struct VariantRecord
     {
-        std::string chrom;
-        size_t pos;
-        std::string id;
         std::string ref;
         std::string alt;
+        std::shared_ptr<PositionRecord> positionRecordPtr;
     };
 
-    MutationType addVarianRecord(VariantRecord record);
-    std::map<MutationType, size_t> getMutationCounts; 
+    mutationTypeCounter_t addPositionRecord(std::shared_ptr<PositionRecord> record);
+    std::map<MutationType, size_t> getMutationCounts;
+    
+    static MutationType evaluateMutationType(std::string ref, std::string alt);
+    static bool isIncluded( std::string str, std::string substr);
 private:
     std::map< MutationType, std::vector<VariantRecord> > m_variantRecords;
 
@@ -36,11 +42,12 @@ private:
 class GenomeData
 {
 public:
-    GenomeData( const char * vcfFilePath );
+    GenomeData( std::string vcfFilePath );
 
 private:
-    std::map<MutationType, int>   m_mutationCounter;
-    std::map<std::string, GeneData>  m_geneData; // maybe would be better as a map from the name
+    std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
+    mutationTypeCounter_t                           m_mutationCounter;
+    std::map<std::string, GeneData>                 m_geneData; // maybe would be better as a map from the name
 
 };
 

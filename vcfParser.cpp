@@ -8,10 +8,17 @@
 
 namespace vcf{
 
-VcfParser::VcfParser( const char * vcfFilePath ) :
+    VcfParser::VcfParser( std::string vcfFilePath ) :
     m_vcfFile(vcfFilePath)
 {
-    assignNextRecord();
+    if( m_vcfFile.good() )
+    {
+        assignNextRecord();
+    }
+    else
+    {
+        throw VcfParserError("File cannot be open or is empty");
+    }
 }
     
     PositionRecord VcfParser::getNextValidRecord()
