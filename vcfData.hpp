@@ -38,7 +38,15 @@ class GeneData
 public:
     GeneData() {}
 
+    /**
+     *  Adds position record.  Evaluates a mutation type(s) and constructs respective variant records.
+     *  Updates mutation counters
+     */
     MutationTypeCounter addPositionRecord(std::shared_ptr<PositionRecord> record);
+    
+    /**
+     *  Returns broken down count of mutations for this gene
+     */
     MutationTypeCounter geneMutationTypeCounter() const { return m_geneMutationCounter; }
     
     /**
@@ -66,11 +74,23 @@ private:
 
 };
 
+/**
+ *  Class that stores all the data for a the vcf file
+ */
 class GenomeData
 {
 public:
     GenomeData( std::string vcfFilePath );
     
+    /**
+     *  Outputs to the screen:
+     *     1) Total number of mutations represented in the file
+     *     2) Breakdown of this count into a mutation type (SVN, INS, DEL, MVN and IDEN)
+     *        (no identity should be stored in the vcf format.  It's printed for the completenes and error checking)
+     *     3) A list of genes within which at least one variant has been found, the total number of variants
+     *        found in that gene, and a breakdown by variant type as in 2).  Variants with no gene name are printed too with
+     *        an empty string instead of a gene name
+     */
     void outputResults();
 
 private:
@@ -79,7 +99,7 @@ private:
     std::string                                     m_vcfFilePath;
     std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
     MutationTypeCounter                             m_mutationCounter;
-    std::map<std::string, GeneData>                 m_geneData; // maybe would be better as a map from the name
+    std::map<std::string, GeneData>                 m_geneData;
 
 };
 
