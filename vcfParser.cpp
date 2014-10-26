@@ -59,11 +59,10 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
             m_nextValidRecord.chrom = parsedLine[0];
             m_nextValidRecord.pos = boost::lexical_cast<size_t>(parsedLine[1]);
             m_nextValidRecord.id = parsedLine[2];
-            m_nextValidRecord.ref = splitAndCapitalise(parsedLine[3]);
-            m_nextValidRecord.alt = splitAndCapitalise(parsedLine[4]);
+            m_nextValidRecord.ref = capitalise(parsedLine[3]);
+            m_nextValidRecord.alt = splitWithDelimiter(capitalise(parsedLine[4]), ',');
             m_nextValidRecord.pass = true;
             m_nextValidRecord.geneName = extractGeneName(parsedLine[7]);
-            
         }
         catch( boost::bad_lexical_cast const& )
         {
@@ -71,8 +70,6 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
         }
         return true;
     }
-    
-
     return false;
 }
     
@@ -90,11 +87,12 @@ std::vector<std::string> VcfParser::splitWithDelimiter(std::string str ,char del
     return parsedLine;
 }
     
-std::vector<std::string> VcfParser::splitAndCapitalise(std::string str) const
+std::string VcfParser::capitalise(std::string str) const
 {
     std::transform(str.begin(), str.end(),str.begin(), ::toupper);
-    return splitWithDelimiter(str, ',');
+    return str;
 }
+    
     
 std::string VcfParser::extractGeneName(std::string str) const
 {

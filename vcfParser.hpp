@@ -22,12 +22,15 @@ public:
     explicit VcfParserError(const std::string &msg) : std::runtime_error(msg) {}
 };
 
+/**
+ *  Data for a single entry in the vcf file.
+ */
 struct PositionRecord
 {
     std::string chrom;
     size_t pos;
     std::string id;
-    std::vector<std::string> ref;
+    std::string ref;
     std::vector<std::string> alt;
     bool pass;
     std::string geneName;
@@ -59,7 +62,7 @@ private:
     void assignNextRecord();
     bool constructNextValidRecord( const std::vector<std::string>& parsedLine);
     std::vector<std::string> splitWithDelimiter(std::string str, char delim) const;
-    std::vector<std::string> splitAndCapitalise(std::string str) const;
+    std::string capitalise(std::string str) const;
     /**
      * Extracts gene name from the INFO field.  If gene name not specified returns a
      * empty string

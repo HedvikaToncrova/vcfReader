@@ -22,7 +22,7 @@ size_t MutationTypeCounter::totalNumberOfMutations()
     {
         total += mutation.second;
     }
-    return total;
+    return total - counter[MutationType::IDEN];
 }
     
 std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutationTypeCounter)
@@ -44,8 +44,6 @@ GenomeData::GenomeData( std::string vcfFilePath ) :
     {
         m_positionRecords.push_back(std::make_shared<PositionRecord>(parser.getNextValidRecord()));
         auto geneName = m_positionRecords.back()->geneName;
-        
-        std::cout << "next valid record with position " << m_positionRecords.back()->pos << std::endl;
         auto geneIt = m_geneData.find(geneName);
         if( geneIt == m_geneData.end() )
         {
@@ -58,7 +56,6 @@ GenomeData::GenomeData( std::string vcfFilePath ) :
         {
             m_mutationCounter.counter[mutationType.first] += mutationType.second;
         }
-        
     }
 }
     
@@ -82,22 +79,19 @@ void GenomeData::outputResults()
 MutationTypeCounter GeneData::addPositionRecord(std::shared_ptr<PositionRecord> record)
 {
     MutationTypeCounter positionMutations;
-    for( auto ref : record->ref )
+    for(auto alt : record->alt )
     {
-        for(auto alt : record->alt )
+        auto mutationType = evaluateMutationType(record->ref, alt);
+        positionMutations.counter[mutationType]++;
+        m_geneMutationCounter.counter[mutationType]++;
+        VariantRecord varRec = {record->ref, alt, record};
+        if( m_variantRecords.count(mutationType) )
         {
-            auto mutationType = evaluateMutationType(ref, alt);
-            positionMutations.counter[mutationType]++;
-            m_geneMutationCounter.counter[mutationType]++;
-            VariantRecord varRec = {ref, alt, record};
-            if( m_variantRecords.count(mutationType) )
-            {
-                m_variantRecords[mutationType].push_back(varRec);
-            }
-            else
-            {
-                m_variantRecords.insert( {mutationType, {varRec}} );
-            }
+            m_variantRecords[mutationType].push_back(varRec);
+        }
+        else
+        {
+            m_variantRecords.insert( {mutationType, {varRec}} );
         }
     }
     return positionMutations;

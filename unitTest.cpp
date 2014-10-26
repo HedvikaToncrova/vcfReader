@@ -29,26 +29,6 @@ BOOST_AUTO_TEST_CASE( testSplitWithDelimiter )
     BOOST_CHECK_EQUAL(res4.size(), 4);
 }
 
-
-BOOST_AUTO_TEST_CASE( testSplitAndCapitalise )
-{
-    VcfParser parser("testData/testVcfFile.vcf");
-    auto res1 = parser.splitAndCapitalise("ATt, GcT");
-    BOOST_CHECK_EQUAL(res1.size(), 2);
-    BOOST_CHECK_EQUAL(res1[0].compare("ATT"), 0);
-    BOOST_CHECK(res1[0].compare("ATt") != 0);
-    BOOST_CHECK_EQUAL(res1[1].compare("GCT"), 0);
-
-    auto res2 = parser.splitAndCapitalise("ATt3df, jklo, p;Y");
-    BOOST_CHECK_EQUAL(res2.size(), 3);
-    BOOST_CHECK_EQUAL(res2[0].compare("ATT3DF"), 0);
-    BOOST_CHECK_EQUAL(res2[1].compare("JKLO"), 0);
-    BOOST_CHECK_EQUAL(res2[2].compare("P;Y"), 0);
-    
-    auto res3 = parser.splitAndCapitalise("");
-    BOOST_CHECK(res3.empty());
-}
-
 BOOST_AUTO_TEST_CASE( testExtractGeneName )
 {
     VcfParser parser("testData/testVcfFile.vcf");
@@ -77,8 +57,7 @@ BOOST_AUTO_TEST_CASE( testVcfParser )
     BOOST_CHECK_EQUAL( validRecord1.chrom.compare("20"), 0 );
     BOOST_CHECK_EQUAL( validRecord1.pos, 65900 );
     BOOST_CHECK_EQUAL( validRecord1.id.compare("rs6053810"), 0 );
-    BOOST_CHECK_EQUAL( validRecord1.ref.size(), 1 );
-    BOOST_CHECK_EQUAL( validRecord1.ref[0].compare("G"), 0 );
+    BOOST_CHECK_EQUAL( validRecord1.ref.compare("G"), 0 );
     BOOST_CHECK_EQUAL( validRecord1.alt.size(), 1 );
     BOOST_CHECK_EQUAL( validRecord1.alt[0].compare("A"), 0 );
     BOOST_CHECK( validRecord1.pass );
@@ -146,18 +125,31 @@ BOOST_AUTO_TEST_CASE( testGenomeData )
     GenomeData gd("testData/testVcfFile2.vcf");
 
     // all records get correctly parsed and aportioned to genes
-    /*
-     std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
-     MutationTypeCounter                             m_mutationCounter;
-     std::map<std::string, GeneData>                 m_geneData;
-     */
     BOOST_CHECK_EQUAL(gd.m_positionRecords.size(), 6);  // 8 in total, 2 do not PASS
-    //BOOST_CHECK_EQUAL(gd.m_mutationCounter.size())
-    BOOST_CHECK_EQUAL(gd.m_geneData.size(), 2);
+    
+    // check genes
+    BOOST_CHECK_EQUAL(gd.m_geneData.size(), 2);     // 2 genes
     BOOST_CHECK(gd.m_geneData.count("ENSG00000178591"));
     BOOST_CHECK(gd.m_geneData.count("ENSG00000125788"));
-    auto geneMutCounter1 = gd.m_geneData.at("ENSG00000178591");
-    auto geneMutCounter2 = gd.m_geneData.at("ENSG00000125788");
+    auto geneMutCounter1 = gd.m_geneData.at("ENSG00000178591").geneMutationTypeCounter().counter;
+    auto geneMutCounter2 = gd.m_geneData.at("ENSG00000125788").geneMutationTypeCounter().counter;
+    BOOST_CHECK_EQUAL(geneMutCounter1[MutationType::SVN], 3);
+    BOOST_CHECK_EQUAL(geneMutCounter1[MutationType::INS], 1);
+    BOOST_CHECK_EQUAL(geneMutCounter1[MutationType::DEL], 1);
+    BOOST_CHECK_EQUAL(geneMutCounter1[MutationType::MVN], 0);
+    BOOST_CHECK_EQUAL(geneMutCounter1[MutationType::IDEN], 0);
 
-    //BOOST_CHECK_EQUAL(gd.
+    BOOST_CHECK_EQUAL(geneMutCounter2[MutationType::SVN], 0);
+    BOOST_CHECK_EQUAL(geneMutCounter2[MutationType::INS], 0);
+    BOOST_CHECK_EQUAL(geneMutCounter2[MutationType::DEL], 2);
+    BOOST_CHECK_EQUAL(geneMutCounter2[MutationType::MVN], 1);
+    BOOST_CHECK_EQUAL(geneMutCounter2[MutationType::IDEN], 0);
+    
+    // check totals
+    auto totalCounter = gd.m_mutationCounter.counter;
+    BOOST_CHECK_EQUAL(totalCounter[MutationType::SVN], 3);
+    BOOST_CHECK_EQUAL(totalCounter[MutationType::INS], 1);
+    BOOST_CHECK_EQUAL(totalCounter[MutationType::DEL], 3);
+    BOOST_CHECK_EQUAL(totalCounter[MutationType::MVN], 1);
+    BOOST_CHECK_EQUAL(totalCounter[MutationType::IDEN], 0);
 }
