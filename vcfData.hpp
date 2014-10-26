@@ -7,6 +7,8 @@
 
 #include "vcfParser.hpp"
 
+struct testGenomeData;
+
 namespace vcf {
 
 enum class MutationType
@@ -14,12 +16,20 @@ enum class MutationType
     IDEN, SVN, INS, DEL, MVN
 };
 
-typedef std::map<MutationType, int> mutationTypeCounter_t;
+struct MutationTypeCounter
+{
+    MutationTypeCounter();
+    std::map<MutationType, int> counter;
+
+    size_t totalNumberOfMutations();
+};
+
+std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutationTypeCounter);
     
 class GeneData
 {
 public:
-    GeneData();
+    GeneData() {}
 
 
     struct VariantRecord
@@ -29,13 +39,14 @@ public:
         std::shared_ptr<PositionRecord> positionRecordPtr;
     };
 
-    mutationTypeCounter_t addPositionRecord(std::shared_ptr<PositionRecord> record);
-    std::map<MutationType, size_t> getMutationCounts;
+    MutationTypeCounter addPositionRecord(std::shared_ptr<PositionRecord> record);
+    MutationTypeCounter geneMutationTypeCounter() const { return m_geneMutationCounter; }
     
     static MutationType evaluateMutationType(std::string ref, std::string alt);
     static bool isIncluded( std::string str, std::string substr);
 private:
-    std::map< MutationType, std::vector<VariantRecord> > m_variantRecords;
+    MutationTypeCounter                                     m_geneMutationCounter;
+    std::map< MutationType, std::vector<VariantRecord> >    m_variantRecords;
 
 };
 
@@ -43,10 +54,15 @@ class GenomeData
 {
 public:
     GenomeData( std::string vcfFilePath );
+    
+    void outputResults();
 
 private:
+    friend struct ::testGenomeData;
+    
+    std::string                                     m_vcfFilePath;
     std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
-    mutationTypeCounter_t                           m_mutationCounter;
+    MutationTypeCounter                             m_mutationCounter;
     std::map<std::string, GeneData>                 m_geneData; // maybe would be better as a map from the name
 
 };

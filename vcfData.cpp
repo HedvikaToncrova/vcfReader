@@ -5,30 +5,102 @@
 
 namespace vcf
 {
+    
+MutationTypeCounter::MutationTypeCounter()
+{
+    counter[MutationType::IDEN] = 0;
+    counter[MutationType::SVN] = 0;
+    counter[MutationType::INS] = 0;
+    counter[MutationType::DEL] = 0;
+    counter[MutationType::MVN] = 0;
+}
 
-GenomeData::GenomeData( std::string vcfFilePath )
+size_t MutationTypeCounter::totalNumberOfMutations()
+{
+    size_t total = 0;
+    for( auto mutation : counter )
+    {
+        total += mutation.second;
+    }
+    return total;
+}
+    
+std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutationTypeCounter)
+{
+    os << "\t SVN: " <<  mutationTypeCounter.counter.at(MutationType::SVN) << std::endl
+       << "\t INS: " <<  mutationTypeCounter.counter.at(MutationType::INS) << std::endl
+       << "\t DEL: " <<  mutationTypeCounter.counter.at(MutationType::DEL) << std::endl
+       << "\t MVN: " <<  mutationTypeCounter.counter.at(MutationType::MVN) << std::endl
+       << "\t IDENTITY: " <<  mutationTypeCounter.counter.at(MutationType::IDEN) << std::endl;
+    
+    return os;
+}
+    
+GenomeData::GenomeData( std::string vcfFilePath ) :
+    m_vcfFilePath(vcfFilePath)
 {
     auto parser = VcfParser(vcfFilePath);
     while (parser.hasNextValidRecord() )
     {
         m_positionRecords.push_back(std::make_shared<PositionRecord>(parser.getNextValidRecord()));
+        auto geneName = m_positionRecords.back()->geneName;
+        
         std::cout << "next valid record with position " << m_positionRecords.back()->pos << std::endl;
+        auto geneIt = m_geneData.find(geneName);
+        if( geneIt == m_geneData.end() )
+        {
+            GeneData gd;
+            geneIt = m_geneData.insert({geneName, gd}).first;
+        }
+        auto positionMutations = geneIt->second.addPositionRecord(m_positionRecords.back());
+
+        for(auto mutationType : positionMutations.counter)
+        {
+            m_mutationCounter.counter[mutationType.first] += mutationType.second;
+        }
+        
     }
 }
     
-mutationTypeCounter_t GeneData::addPositionRecord(std::shared_ptr<PositionRecord> record)
+void GenomeData::outputResults()
 {
-    mutationTypeCounter_t positioMutations;
+    std::cout << "**********  RESULTS IN TOTAL  ************" << std::endl;
+    std::cout << "Total number of mutations in " << m_vcfFilePath << ": "
+              << m_mutationCounter.totalNumberOfMutations() << std::endl
+              << m_mutationCounter << std::endl;
+
+    std::cout << "\n \n" << "*********  RESULTS PER GENE ************* " << std::endl;
+    for( auto gene : m_geneData )
+    {
+        auto geneMutationCounter = gene.second.geneMutationTypeCounter();
+        std::cout << gene.first << ": " << geneMutationCounter.totalNumberOfMutations() << std::endl
+            << geneMutationCounter << std::endl;
+        
+    }
+}
+    
+MutationTypeCounter GeneData::addPositionRecord(std::shared_ptr<PositionRecord> record)
+{
+    MutationTypeCounter positionMutations;
     for( auto ref : record->ref )
     {
         for(auto alt : record->alt )
         {
-            //auto mutationType = evaluateMutationType(ref, alt);
+            auto mutationType = evaluateMutationType(ref, alt);
+            positionMutations.counter[mutationType]++;
+            m_geneMutationCounter.counter[mutationType]++;
             VariantRecord varRec = {ref, alt, record};
-            //m_variantRecords.insert( {mutationType, varRec} );
+            if( m_variantRecords.count(mutationType) )
+            {
+                m_variantRecords[mutationType].push_back(varRec);
+            }
+            else
+            {
+                m_variantRecords.insert( {mutationType, {varRec}} );
+            }
         }
     }
-    return positioMutations;
+    return positionMutations;
 }
     
 MutationType GeneData::evaluateMutationType(std::string ref, std::string alt)

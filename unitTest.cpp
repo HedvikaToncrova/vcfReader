@@ -120,13 +120,11 @@ BOOST_AUTO_TEST_CASE( testIsIncluded )
 
 BOOST_AUTO_TEST_CASE( testEvaluateMutationType)
 {
-    /*
     BOOST_CHECK(GeneData::evaluateMutationType("", "") == MutationType::IDEN);
     BOOST_CHECK(GeneData::evaluateMutationType("A", "A") == MutationType::IDEN);
     BOOST_CHECK(GeneData::evaluateMutationType("AT", "AT") == MutationType::IDEN);
     BOOST_CHECK(GeneData::evaluateMutationType("A", "G") == MutationType::SVN);
     BOOST_CHECK(GeneData::evaluateMutationType("C", "T") == MutationType::SVN);
-     */
     BOOST_CHECK(GeneData::evaluateMutationType("AT", "A") == MutationType::DEL);
     BOOST_CHECK(GeneData::evaluateMutationType("ABGHG", "H") == MutationType::DEL);
     BOOST_CHECK(GeneData::evaluateMutationType("ABHG", "ABH") == MutationType::DEL);
@@ -141,4 +139,25 @@ BOOST_AUTO_TEST_CASE( testEvaluateMutationType)
     BOOST_CHECK(GeneData::evaluateMutationType("DB", "ADKBHJ") == MutationType::MVN);
     BOOST_CHECK(GeneData::evaluateMutationType("AAAA", "ATAT") == MutationType::MVN);
     BOOST_CHECK(GeneData::evaluateMutationType("CTCT", "CACTTTTTT") == MutationType::MVN);
+}
+
+BOOST_AUTO_TEST_CASE( testGenomeData )
+{
+    GenomeData gd("testData/testVcfFile2.vcf");
+
+    // all records get correctly parsed and aportioned to genes
+    /*
+     std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
+     MutationTypeCounter                             m_mutationCounter;
+     std::map<std::string, GeneData>                 m_geneData;
+     */
+    BOOST_CHECK_EQUAL(gd.m_positionRecords.size(), 6);  // 8 in total, 2 do not PASS
+    //BOOST_CHECK_EQUAL(gd.m_mutationCounter.size())
+    BOOST_CHECK_EQUAL(gd.m_geneData.size(), 2);
+    BOOST_CHECK(gd.m_geneData.count("ENSG00000178591"));
+    BOOST_CHECK(gd.m_geneData.count("ENSG00000125788"));
+    auto geneMutCounter1 = gd.m_geneData.at("ENSG00000178591");
+    auto geneMutCounter2 = gd.m_geneData.at("ENSG00000125788");
+
+    //BOOST_CHECK_EQUAL(gd.
 }

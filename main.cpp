@@ -8,11 +8,12 @@ int main(int argc, const char * argv[])
     {
         std::string vcfInputPath( argv[1], strlen(argv[1]));
         vcf::GenomeData genomeData( vcfInputPath );
-        // vcf::GenomeData genomeData( argv[1] );
+        genomeData.outputResults();
     }
     else
     {
         vcf::GenomeData genomeData( "testData/testVcfFile.vcf" );
+        genomeData.outputResults();
         return 1;
     }
     return 0;
