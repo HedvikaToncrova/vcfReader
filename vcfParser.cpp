@@ -47,6 +47,12 @@ void VcfParser::assignNextRecord()
     
 bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsedLine)
 {
+    // ignore empty lines
+    if(parsedLine.size() == 0)
+    {
+        return false;
+    }
+
     if (parsedLine.size() != numberOfVcfFields)
     {
         throw VcfParserError("Incorrect number of fields in this row");
