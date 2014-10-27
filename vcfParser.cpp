@@ -68,7 +68,7 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
             m_nextValidRecord.ref = capitalise(parsedLine[3]);
             m_nextValidRecord.alt = splitWithDelimiter(capitalise(parsedLine[4]), ',');
             m_nextValidRecord.pass = true;
-            m_nextValidRecord.geneName = extractGeneName(parsedLine[7]);
+            m_nextValidRecord.geneNames = extractGeneNames(parsedLine[7]);
         }
         catch( boost::bad_lexical_cast const& )
         {
@@ -79,7 +79,7 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
     return false;
 }
     
-std::vector<std::string> VcfParser::splitWithDelimiter(std::string str ,char delim) const
+std::vector<std::string> VcfParser::splitWithDelimiter(std::string str, char delim) const
 {
     std::stringstream lineStream(str);
     std::vector<std::string> parsedLine;
@@ -100,18 +100,18 @@ std::string VcfParser::capitalise(std::string str) const
 }
     
     
-std::string VcfParser::extractGeneName(std::string str) const
+  std::vector<std::string> VcfParser::extractGeneNames(std::string str) const
 {
     auto splitString = splitWithDelimiter(str, ';');
-    std::string geneName;
+    std::vector<std::string> geneNames;
     for( auto s : splitString )
     {
         if(boost::starts_with(s, "Gene="))
         {
-            geneName = s.substr(5);
+	    geneNames = splitWithDelimiter(s.substr(5), ',');
         }
     }
-    return geneName;
+    return geneNames;
 }
     
 } // namespace vcf

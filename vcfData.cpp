@@ -43,19 +43,22 @@ GenomeData::GenomeData( std::string vcfFilePath ) :
     while (parser.hasNextValidRecord() )
     {
         m_positionRecords.push_back(std::make_shared<PositionRecord>(parser.getNextValidRecord()));
-        auto geneName = m_positionRecords.back()->geneName;
-        auto geneIt = m_geneData.find(geneName);
-        if( geneIt == m_geneData.end() )
-        {
-            GeneData gd;
-            geneIt = m_geneData.insert({geneName, gd}).first;
-        }
-        auto positionMutations = geneIt->second.addPositionRecord(m_positionRecords.back());
-
-        for(auto mutationType : positionMutations.counter)
-        {
-            m_mutationCounter.counter[mutationType.first] += mutationType.second;
-        }
+	MutationTypeCounter positionMutations;
+        auto geneNames = m_positionRecords.back()->geneNames;
+	for( auto geneName : geneNames)
+	{
+	    auto geneIt = m_geneData.find(geneName);
+	    if( geneIt == m_geneData.end() )
+	    {
+	        GeneData gd;
+		geneIt = m_geneData.insert({geneName, gd}).first;
+	    }
+	    positionMutations = geneIt->second.addPositionRecord(m_positionRecords.back());
+	}
+	for(auto mutationType : positionMutations.counter)
+	{
+	    m_mutationCounter.counter[mutationType.first] += mutationType.second;
+	}
     }
 }
     

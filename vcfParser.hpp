@@ -33,7 +33,7 @@ struct PositionRecord
     std::string ref;
     std::vector<std::string> alt;
     bool pass;
-    std::string geneName;
+    std::vector<std::string> geneNames;
 };
 
 /**
@@ -64,10 +64,10 @@ private:
     std::vector<std::string> splitWithDelimiter(std::string str, char delim) const;
     std::string capitalise(std::string str) const;
     /**
-     * Extracts gene name from the INFO field.  If gene name not specified returns a
-     * empty string
+     * Extracts gene names from the INFO field (comma delimited list of gene names).
+     * If gene name(s) not specified returns an empty list
      */
-    std::string extractGeneName(std::string str) const;
+    std::vector<std::string> extractGeneNames(std::string str) const;
     
     friend struct ::testSplitWithDelimiter;
     friend struct ::testSplitAndCapitalise;
