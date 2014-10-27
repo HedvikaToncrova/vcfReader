@@ -97,7 +97,7 @@ MutationType PositionRecordProcessor::evaluateMutationType(std::string ref, std:
 {
     if(ref == alt)
     {
-	       return MutationType::IDEN;
+        return MutationType::IDEN;
     }
     size_t refLength = ref.length();
     size_t altLength = alt.length();

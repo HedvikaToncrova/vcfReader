@@ -48,7 +48,7 @@ public:
      * Checks for a next valid record in the vcf file stream
      *
      *  Definition of valid: 1) line does not start with #
-     *                       2) record has all 10 specified, tab delimited field
+     *                       2) record has all 10 specified, tab delimited data fields
      *                       3) record has a PASS quality filtering
      */
     bool hasNextValidRecord() const { return m_hasNextRow; }

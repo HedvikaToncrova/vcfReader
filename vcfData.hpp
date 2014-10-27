@@ -17,7 +17,7 @@ enum class MutationType
 };
 
 /**
- *  Struct for counting mution types within a higher structure (Gene or Genome)
+ *  Struct for counting mutation types within.  Has a nice << operator
  */
 struct MutationTypeCounter
 {
@@ -61,7 +61,7 @@ private:
 
 
 /**
- *  Class that stores all the data for a the vcf file
+ *  Class that stores mutationType counts on gene and total levels for all data in the vcf file
  */
 class GenomeData
 {
@@ -74,8 +74,7 @@ public:
      *     2) Breakdown of this count into a mutation type (SVN, INS, DEL, MVN and IDEN)
      *        (no identity should be stored in the vcf format.  It's printed for the completenes and error checking)
      *     3) A list of genes within which at least one variant has been found, the total number of variants
-     *        found in that gene, and a breakdown by variant type as in 2).  Variants with no gene name are printed too with
-     *        an empty string instead of a gene name
+     *        found in that gene, and a breakdown by variant type as in 2).  Variants with no gene name are not printed
      */
     void outputResults();
 

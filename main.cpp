@@ -13,8 +13,7 @@ int main(int argc, const char * argv[])
     }
     else
     {
-        vcf::GenomeData genomeData( "testData/testVcfFile.vcf" );
-        genomeData.outputResults();
+        std::cout << "Invalid program options.  Usage: [ input vcf file ]" << std::endl;
         return 1;
     }
     return 0;

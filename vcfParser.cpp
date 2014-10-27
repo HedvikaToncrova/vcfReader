@@ -53,6 +53,7 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
         return false;
     }
 
+    // accept only lines with all data fields
     if (parsedLine.size() != numberOfVcfFields)
     {
         throw VcfParserError("Incorrect number of fields in this row " + std::to_string(parsedLine.size()));
@@ -85,7 +86,7 @@ std::vector<std::string> VcfParser::splitWithDelimiter(std::string str, char del
     std::vector<std::string> parsedLine;
     std::string cell;
     
-    while(std::getline(lineStream,cell,delim))
+    while(std::getline(lineStream, cell, delim))
     {
         boost::algorithm::trim(cell);
         parsedLine.push_back(cell);
@@ -95,7 +96,7 @@ std::vector<std::string> VcfParser::splitWithDelimiter(std::string str, char del
     
 std::string VcfParser::capitalise(std::string str) const
 {
-    std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
     return str;
 }
     
