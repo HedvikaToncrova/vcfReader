@@ -37,28 +37,16 @@ std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutation
 }
     
 GenomeData::GenomeData( std::string vcfFilePath ) :
-    m_vcfFilePath(vcfFilePath)
+    m_vcfFilePath(vcfFilePath),
+    m_totalMutationCounter(std::make_shared<MutationTypeCounter>()),
+    m_geneMutationCounter(std::make_shared<std::map<std::string, MutationTypeCounter>>())
+
 {
     VcfParser parser(m_vcfFilePath);
     while (parser.hasNextValidRecord() )
     {
-        m_positionRecords.push_back(std::make_shared<PositionRecord>(parser.getNextValidRecord()));
-	MutationTypeCounter positionMutations;
-        auto geneNames = m_positionRecords.back()->geneNames;
-	for( auto geneName : geneNames)
-	{
-	    auto geneIt = m_geneData.find(geneName);
-	    if( geneIt == m_geneData.end() )
-	    {
-	        GeneData gd;
-		geneIt = m_geneData.insert({geneName, gd}).first;
-	    }
-	    positionMutations = geneIt->second.addPositionRecord(m_positionRecords.back());
-	}
-	for(auto mutationType : positionMutations.counter)
-	{
-	    m_mutationCounter.counter[mutationType.first] += mutationType.second;
-	}
+        PositionRecordProcessor recordProcessor( parser.getNextValidRecord() );
+        recordProcessor.updateCounters(m_totalMutationCounter, m_geneMutationCounter);
     }
 }
     
@@ -66,41 +54,46 @@ void GenomeData::outputResults()
 {
     std::cout << "**********  RESULTS IN TOTAL  ************" << std::endl;
     std::cout << "Total number of mutations in " << m_vcfFilePath << ": "
-              << m_mutationCounter.totalNumberOfMutations() << std::endl
-              << m_mutationCounter << std::endl;
-
+              << m_totalMutationCounter->totalNumberOfMutations() << std::endl
+              << *m_totalMutationCounter << std::endl;
+    
     std::cout << "\n \n" << "*********  RESULTS PER GENE ************* " << std::endl;
-    for( auto gene : m_geneData )
+    for( auto gene : *m_geneMutationCounter )
     {
-        auto geneMutationCounter = gene.second.geneMutationTypeCounter();
-        std::cout << gene.first << ": " << geneMutationCounter.totalNumberOfMutations() << std::endl
-            << geneMutationCounter << std::endl;
+        std::cout << gene.first << ": " << gene.second.totalNumberOfMutations() << std::endl
+            << gene.second << std::endl;
         
     }
 }
     
-MutationTypeCounter GeneData::addPositionRecord(std::shared_ptr<PositionRecord> record)
+void PositionRecordProcessor::updateCounters(std::shared_ptr<MutationTypeCounter> totalMutationCounter,
+                                             std::shared_ptr< std::map<std::string, MutationTypeCounter> > geneMutationCounter)
 {
-    MutationTypeCounter positionMutations;
-    for(auto alt : record->alt )
+    for(auto alt : m_positionRecord.alt )
     {
-        auto mutationType = evaluateMutationType(record->ref, alt);
-        positionMutations.counter[mutationType]++;
-        m_geneMutationCounter.counter[mutationType]++;
-        VariantRecord varRec = {record->ref, alt, record};
-        if( m_variantRecords.count(mutationType) )
+        // update total counter
+        auto mutationType = evaluateMutationType(m_positionRecord.ref, alt);
+        totalMutationCounter->counter[mutationType]++;
+
+        // update gene counters (one position record can be associated with multiple genes)
+        for( auto geneName : m_positionRecord.geneNames)
         {
-            m_variantRecords[mutationType].push_back(varRec);
-        }
-        else
-        {
-            m_variantRecords.insert( {mutationType, {varRec}} );
+            auto geneIt = geneMutationCounter->find(geneName);
+            if( geneIt == geneMutationCounter->end() )
+            {
+                MutationTypeCounter mtc;
+                mtc.counter[mutationType]++;
+                geneMutationCounter->insert({geneName, mtc});
+            }
+            else
+            {
+                geneIt->second.counter[mutationType]++;
+            }
         }
     }
-    return positionMutations;
 }
     
-MutationType GeneData::evaluateMutationType(std::string ref, std::string alt)
+MutationType PositionRecordProcessor::evaluateMutationType(std::string ref, std::string alt)
 {
     if(ref == alt)
     {
@@ -128,7 +121,7 @@ MutationType GeneData::evaluateMutationType(std::string ref, std::string alt)
     return MutationType::MVN;
 }
     
-bool GeneData::isIncluded( std::string str, std::string substr)
+bool PositionRecordProcessor::isIncluded( std::string str, std::string substr)
 {
     size_t strLength = str.length();
     size_t substrLength = substr.length();

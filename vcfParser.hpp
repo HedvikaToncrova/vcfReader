@@ -8,7 +8,7 @@
 
 struct testSplitWithDelimiter;
 struct testSplitAndCapitalise;
-struct testExtractGeneName;
+struct testExtractGeneNames;
 
 namespace vcf
 {
@@ -71,7 +71,7 @@ private:
     
     friend struct ::testSplitWithDelimiter;
     friend struct ::testSplitAndCapitalise;
-    friend struct ::testExtractGeneName;
+    friend struct ::testExtractGeneNames;
     
     std::ifstream   m_vcfFile;
     bool            m_hasNextRow;

@@ -31,23 +31,20 @@ struct MutationTypeCounter
 std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutationTypeCounter);
 
 /**
- * Representation of a gene and all information about the mutations on it
+ *  Processes a position record: evaluates the mutation types and updates total and gene mutation counters
  */
-class GeneData
+class PositionRecordProcessor
 {
 public:
-    GeneData() {}
-
-    /**
-     *  Adds position record.  Evaluates a mutation type(s) and constructs respective variant records.
-     *  Updates mutation counters
-     */
-    MutationTypeCounter addPositionRecord(std::shared_ptr<PositionRecord> record);
+    PositionRecordProcessor(PositionRecord positionRecord) :
+        m_positionRecord(positionRecord)
+    {}
     
     /**
-     *  Returns broken down count of mutations for this gene
+     *  Updates total and gene mutation counters for the mutations recorded in the m_positionRecord
      */
-    MutationTypeCounter geneMutationTypeCounter() const { return m_geneMutationCounter; }
+    void updateCounters(std::shared_ptr<MutationTypeCounter> totalMutationCounter,
+                        std::shared_ptr< std::map<std::string, MutationTypeCounter> > geneMutationCounter);
     
     /**
      * From two strings (reference and alternate base(es)) determines the mutation type
@@ -59,20 +56,9 @@ public:
     static bool isIncluded( std::string str, std::string substr);
     
 private:
-    /**
-     * Representation of a variant record.  References position record which stores additional details
-     */
-    struct VariantRecord
-    {
-        std::string ref;
-        std::string alt;
-        std::shared_ptr<PositionRecord> positionRecordPtr;
-    };
-    
-    MutationTypeCounter                                     m_geneMutationCounter;
-    std::map< MutationType, std::vector<VariantRecord> >    m_variantRecords;
-
+    PositionRecord m_positionRecord;
 };
+
 
 /**
  *  Class that stores all the data for a the vcf file
@@ -96,10 +82,9 @@ public:
 private:
     friend struct ::testGenomeData;
     
-    std::string                                     m_vcfFilePath;
-    std::vector<std::shared_ptr<PositionRecord>>    m_positionRecords;
-    MutationTypeCounter                             m_mutationCounter;
-    std::map<std::string, GeneData>                 m_geneData;
+    std::string                                                     m_vcfFilePath;
+    std::shared_ptr<MutationTypeCounter>                            m_totalMutationCounter;
+    std::shared_ptr<std::map<std::string, MutationTypeCounter>>     m_geneMutationCounter;
 
 };
 

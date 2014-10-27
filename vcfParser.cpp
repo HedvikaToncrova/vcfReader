@@ -8,7 +8,7 @@
 
 namespace vcf{
 
-    VcfParser::VcfParser( std::string vcfFilePath ) :
+VcfParser::VcfParser( std::string vcfFilePath ) :
     m_vcfFile(vcfFilePath)
 {
     if( m_vcfFile.good() )
@@ -21,7 +21,7 @@ namespace vcf{
     }
 }
     
-    PositionRecord VcfParser::getNextValidRecord()
+PositionRecord VcfParser::getNextValidRecord()
 {
     PositionRecord currentRecord = m_nextValidRecord;
     assignNextRecord();
@@ -55,7 +55,7 @@ bool VcfParser::constructNextValidRecord( const std::vector<std::string>& parsed
 
     if (parsedLine.size() != numberOfVcfFields)
     {
-        throw VcfParserError("Incorrect number of fields in this row");
+        throw VcfParserError("Incorrect number of fields in this row " + std::to_string(parsedLine.size()));
     }
 
     if( parsedLine[6].compare("PASS") == 0)
@@ -108,7 +108,7 @@ std::string VcfParser::capitalise(std::string str) const
     {
         if(boost::starts_with(s, "Gene="))
         {
-	    geneNames = splitWithDelimiter(s.substr(5), ',');
+            geneNames = splitWithDelimiter(s.substr(5), ',');
         }
     }
     return geneNames;
