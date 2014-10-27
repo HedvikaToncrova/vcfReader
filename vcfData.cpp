@@ -39,7 +39,7 @@ std::ostream& operator<< ( std::ostream& os, const MutationTypeCounter& mutation
 GenomeData::GenomeData( std::string vcfFilePath ) :
     m_vcfFilePath(vcfFilePath)
 {
-    auto parser = VcfParser(vcfFilePath);
+    VcfParser parser(m_vcfFilePath);
     while (parser.hasNextValidRecord() )
     {
         m_positionRecords.push_back(std::make_shared<PositionRecord>(parser.getNextValidRecord()));
